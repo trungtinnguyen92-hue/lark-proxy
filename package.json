@@ -1,0 +1,6 @@
+{
+  "name": "lark-proxy",
+  "version": "1.0.0",
+  "description": "Lark API proxy",
+  "private": true
+}
