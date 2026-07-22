@@ -1,38 +1,35 @@
 export default async function handler(req, res) {
-  // Chỉ cho phép POST
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { data } = req.body;
+    const { text } = req.body;
 
-    if (!data) {
-      return res.status(400).json({ error: 'Missing "data" field' });
-    }
+    // Gọi Lark API trên HF
+    const response = await fetch(
+      'https://api-inference.huggingface.co/models/YOUR-LARK-MODEL-ID',
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.HF_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+        body: JSON.stringify({ inputs: text }),
+      }
+    );
 
-    // Gọi Lark API qua HuggingFace Space (Gradio)
-    const response = await fetch('https://aryanxxvii-larkapi.hf.space/run/predict', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        data: [data],
-      }),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      return res.status(502).json({ error: `Lark API error: ${errText}` });
-    }
-
-    const result = await response.json();
-
-    // Gradio trả về { data: [similarity, band, transcription] }
-    return res.status(200).json({
-      similarity_score: result.data[0],
-      band: result.data[1],
-      transcription: result.data[2],
-    });
+    const data = await response.json();
+    return res.status(200).json(data);
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
