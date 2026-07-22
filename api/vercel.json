@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/v1/lark", "destination": "/api/lark" }
+  ]
+}
